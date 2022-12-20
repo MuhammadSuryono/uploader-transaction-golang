@@ -9,7 +9,7 @@ import (
 	"upoader-golang/util"
 )
 
-func doTheJob(db *sql.DB, values [][]interface{}) {
+func doTheJob(db *sql.DB, mysql *sql.DB, params requestUploadFile, values [][]interface{}) {
 	for {
 		var outerError error
 		func(outerError *error) {
@@ -26,17 +26,22 @@ func doTheJob(db *sql.DB, values [][]interface{}) {
 			)
 
 			_, err = conn.ExecContext(context.Background(), query, values[0]...)
+			str := make([]string, 0)
+			for _, dt := range values[1] {
+				str = append(str, fmt.Sprintf("%v", dt))
+			}
 			if err != nil {
 				str := make([]string, 0)
 				for _, dt := range values[1] {
 					str = append(str, fmt.Sprintf("%v", dt))
 				}
-				util.CsvWrite("qr_error.csv", str)
+				util.CsvWrite(fmt.Sprintf("%s_part_%d.csv", params.Period, params.Part), str)
+				util.WriteErrorLog(err.Error())
 			}
 
 			err = conn.Close()
 			if err != nil {
-				log.Fatal(err.Error())
+				log.Println("Error close DB", err.Error())
 			}
 		}(&outerError)
 		if outerError == nil {

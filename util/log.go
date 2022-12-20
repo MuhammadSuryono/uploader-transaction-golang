@@ -21,6 +21,7 @@ func LogConsole(filename string, msg string) {
 func writeLog(f *os.File, str string) {
 	log.SetOutput(f)
 	log.Println(str)
+	defer f.Close()
 }
 
 func openFile(filename string) *os.File {
@@ -38,7 +39,6 @@ func openFile(filename string) *os.File {
 	if err != nil {
 		log.Fatalf("=> Error opening file: %v", err)
 	}
-	defer f.Close()
 
 	return f
 }

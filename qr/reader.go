@@ -30,7 +30,7 @@ func readCsvFilePerLineThenSendToWorker(csvReader *csv.Reader, jobs chan<- [][]i
 		}
 
 		if len(firstRow) == 0 {
-			if len(dataHeaderCsvValidate) != len(row) {
+			if len(DataHeaderCsvValidate) != len(row) {
 				log.Println("Header format not same with data header validation")
 				break
 			}

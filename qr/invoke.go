@@ -2,9 +2,11 @@ package qr
 
 import (
 	"bytes"
+	"context"
 	"fmt"
 	"github.com/MuhammadSuryono/module-golang-server/http/response"
 	"github.com/gin-gonic/gin"
+	"github.com/google/uuid"
 	"io"
 	"log"
 	"math"
@@ -12,6 +14,7 @@ import (
 	"sync"
 	"time"
 	"upoader-golang/database"
+	"upoader-golang/util"
 )
 
 type requestUploadFile struct {
@@ -64,6 +67,12 @@ func InvokeRequest(c *gin.Context) {
 		return
 	}
 
+	mysql, err := database.DBOpenConnectionMysql()
+	if err != nil {
+		log.Println("Error DB Connection MYSQL", err.Error())
+		return
+	}
+
 	csvReader, err := openCsvFile(buf.Bytes())
 	if err != nil {
 		//util.LogConsole(nameConsole, fmt.Sprintf("=> Error open file CSV %v", errDb.Error()))
@@ -77,10 +86,35 @@ func InvokeRequest(c *gin.Context) {
 		return
 	}
 
+	util.CsvWrite(fmt.Sprintf("%s_part_%d.csv", params.Period, params.Part), DataHeaderCsvValidate)
+
 	jobs := make(chan [][]interface{}, 0)
 	wg := new(sync.WaitGroup)
 
-	go dispatchWorkers(db, jobs, wg)
+	go dispatchWorkers(db, mysql, params, jobs, wg)
+
+	conn, err := mysql.Conn(context.Background())
+	if err != nil {
+		log.Fatalln("Error", err.Error())
+	}
+	id := uuid.New().String()
+
+	query := fmt.Sprintf("INSERT INTO logs (transaction_id,periode,part,start_at,status) VALUES ('%s','%s','%d','%v','Start')",
+		id,
+		params.Period,
+		params.Part,
+		start,
+	)
+
+	_, err = conn.ExecContext(context.Background(), query)
+	if err != nil {
+		log.Println("Error")
+	}
+
+	err = conn.Close()
+	if err != nil {
+		log.Fatal(err.Error())
+	}
 
 	go func() {
 		//util.LogConsole(nameConsole, "=> Read csv FilePerLine")
@@ -90,7 +124,21 @@ func InvokeRequest(c *gin.Context) {
 
 		duration := time.Since(start)
 		log.Println(fmt.Sprintf("=> Done in %d Minute", int(math.Ceil(duration.Seconds()))/60))
+		queryUpdate := fmt.Sprintf("UPDATE logs set finish_at = '%s', status = 'Finish'",
+			fmt.Sprintf("%v", duration),
+		)
+		conn, err := mysql.Conn(context.Background())
+		_, err = conn.ExecContext(context.Background(), queryUpdate)
+		if err != nil {
+			log.Println("Error")
+		}
+
+		err = conn.Close()
+		if err != nil {
+			log.Fatal(err.Error())
+		}
 	}()
+
 	c.JSON(response.SUCCESS_CODE, response.FailureResponse(
 		response.SUCCESS_STATUS,
 		"Data QR still uploading",

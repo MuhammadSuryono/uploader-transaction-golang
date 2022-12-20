@@ -60,7 +60,7 @@ var dataHeaders = []string{
 	"division_user_name",
 }
 
-var dataHeaderCsvValidate = []string{
+var DataHeaderCsvValidate = []string{
 	"TYPE",
 	"MID",
 	"MERCHANT_NAME",
@@ -110,9 +110,9 @@ func generateQuestionsMark(n int) []string {
 }
 
 func validateHeader(header []string) error {
-	if len(dataHeaderCsvValidate) == len(header) {
-		for i, _ := range dataHeaderCsvValidate {
-			if dataHeaderCsvValidate[i] != header[i] {
+	if len(DataHeaderCsvValidate) == len(header) {
+		for i, _ := range DataHeaderCsvValidate {
+			if DataHeaderCsvValidate[i] != header[i] {
 				server.Context.JSON(response.BAD_REQUEST_CODE, response.FailureResponse(
 					response.BAD_REQUEST_STATUS,
 					"Header QR un-validate",
@@ -122,12 +122,12 @@ func validateHeader(header []string) error {
 		}
 	}
 
-	if len(dataHeaderCsvValidate) != len(header) {
+	if len(DataHeaderCsvValidate) != len(header) {
 		server.Context.JSON(response.BAD_REQUEST_CODE, response.FailureResponse(
 			response.BAD_REQUEST_STATUS,
-			fmt.Sprintf("Header QR requires %d but given %d", len(dataHeaderCsvValidate), len(header)),
+			fmt.Sprintf("Header QR requires %d but given %d", len(DataHeaderCsvValidate), len(header)),
 			nil))
-		return errors.New(fmt.Sprintf("Header QR requires %d but given %d", len(dataHeaderCsvValidate), len(header)))
+		return errors.New(fmt.Sprintf("Header QR requires %d but given %d", len(DataHeaderCsvValidate), len(header)))
 	}
 	return nil
 }

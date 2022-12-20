@@ -4,7 +4,7 @@ services:
     container_name: uploader-golang-transaction
     build: .
     ports:
-      - 8081:8081
+      - 9090:8082
     restart: always
     volumes:
       - api:/usr/src/app/

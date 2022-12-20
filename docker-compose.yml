@@ -1,0 +1,17 @@
+version: '3'
+services:
+  app:
+    container_name: uploader-golang-transaction
+    build: .
+    ports:
+      - 8081:8081
+    restart: always
+    volumes:
+      - api:/usr/src/app/
+    networks:
+      - fullstack
+volumes:
+  api:
+networks:
+  fullstack:
+    driver: bridge
